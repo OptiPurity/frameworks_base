@@ -3203,7 +3203,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
         // Update the QuickSettings container
         if (mQS != null) mQS.updateResources();
-
     }
 
     protected void loadDimens() {
