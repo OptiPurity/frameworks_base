@@ -3034,11 +3034,11 @@ public final class Settings {
         public static final String NAVIGATION_BUTTON_GLOW_TIME = "navigation_button_glow_time";
 
         /**
-         * Should the non-intrsive incall ui be used
+         * Whether incomming call UI stays in background
          *
          * @hide
          */
-        public static final String NON_INTRUSIVE_INCALL = "non_intrusive_incall";
+        public static final String CALL_UI_IN_BACKGROUND = "call_ui_in_background";
 
         /**
          * Show when WiFi or data mobile is sending/receiving data
