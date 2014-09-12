@@ -823,9 +823,6 @@ final class ActivityStack {
                         r.userId, System.identityHashCode(r), r.shortComponentName,
                         mPausingActivity != null
                             ? mPausingActivity.shortComponentName : "(none)");
-                if (r.finishing && r.state == ActivityState.PAUSING) {
-                    finishCurrentActivityLocked(r, FINISH_AFTER_VISIBLE, false);
-                }
             }
         }
     }
