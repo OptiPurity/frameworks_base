@@ -1665,4 +1665,31 @@
   </plurals>
     <string name="restr_pin_try_later" msgid="973144472490532377">"Daha sonra tekrar deneyin"</string>
     <string name="immersive_mode_confirmation" msgid="7227416894979047467">"Tam ekrandan çıkmak için yukarıdan aşağıya hızlıca kaydırın."</string>
+
+    <!-- Button to reboot the phone, within the Reboot Options dialog -->
+    <string name="reboot_reboot">Yeniden Başlat</string>
+    <!-- Button to reboot the phone into recovery, within the Reboot Options dialog -->
+    <string name="reboot_recovery">Kurtarma</string>
+    <!-- Button to reboot the phone into bootloader, within the Reboot Options dialog -->
+    <string name="reboot_bootloader">Bootloader</string>
+    <!-- Button to reboot the phone into bootmenu, within the Reboot Options dialog -->
+    <string name="reboot_bootmenu">Boot Menüsü</string>
+    <!-- Button to reboot the phone into fastboot, within the Reboot Options dialog -->
+    <string name="reboot_fastboot">Fastboot</string>
+    <!-- Button to reboot the phone into download, within the Reboot Options dialog -->
+    <string name="reboot_download">Download</string>
+    <!-- Button to soft reboot the device, within the Reboot Options dialog -->
+    <string name="reboot_soft">Hızlı Yeniden Başlat</string>
+
+    <!-- Button to reboot the phone, within the Phone Options dialog -->
+    <string name="reboot_system" product="tablet">Tableti Yeniden Başlat</string>
+    <string name="reboot_system" product="default">Telefonu Yeniden Başlat</string>
+    <!-- Reboot Progress Dialog. This is shown if the user chooses to reboot the phone. -->
+    
+    <!-- label for item that screenshots in phone options dialog -->
+    <string name="global_action_screenshot">Ekran Görüntüsü</string>
+
+    <!-- label for item that reboots the phone in phone options dialog -->
+    <string name="global_action_reboot">Yeniden Başlat</string>
+
 </resources>
