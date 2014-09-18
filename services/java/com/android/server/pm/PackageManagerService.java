@@ -34,6 +34,8 @@ import static libcore.io.OsConstants.S_IXOTH;
 
 import android.app.ComposedIconInfo;
 import android.content.res.AssetManager;
+import android.content.res.ThemeConfig;
+import android.content.res.ThemeManager;
 import android.util.Pair;
 import com.android.internal.app.IMediaContainerService;
 import com.android.internal.app.ResolverActivity;
@@ -5304,6 +5306,7 @@ public class PackageManagerService extends IPackageManager.Stub {
                 Exception failedException = null;
 
                 insertIntoOverlayMap(target, pkg);
+<<<<<<< HEAD
                 try {
                     compileResourcesAndIdmapIfNeeded(mPackages.get(target), pkg);
                 } catch(IdmapException e) {
@@ -5323,10 +5326,44 @@ public class PackageManagerService extends IPackageManager.Stub {
                     uninstallThemeForAllApps(pkg);
                     deletePackageLI(pkg.packageName, null, true, null, null, 0, null, false);
                     return null;
+=======
+                if (mBootThemeConfig != null &&
+                        (pkg.packageName.equals(mBootThemeConfig.getOverlayPkgName()) ||
+                        pkg.packageName.equals(
+                                mBootThemeConfig.getOverlayPkgNameForApp(target)))) {
+                    try {
+                        compileResourcesAndIdmapIfNeeded(mPackages.get(target), pkg);
+                    } catch (IdmapException e) {
+                        failedException = e;
+                        mLastScanError = PackageManager.INSTALL_FAILED_THEME_IDMAP_ERROR;
+                    } catch (AaptException e) {
+                        failedException = e;
+                        mLastScanError = PackageManager.INSTALL_FAILED_THEME_AAPT_ERROR;
+                    } catch (Exception e) {
+                        failedException = e;
+                        mLastScanError = PackageManager.INSTALL_FAILED_THEME_UNKNOWN_ERROR;
+                    }
+
+                    if (failedException != null) {
+                        // Theme install failed, cleanup!
+                        Log.w(TAG, "Unable to process theme " + pkgName, failedException);
+                        uninstallThemeForAllApps(pkg);
+                        deletePackageLI(pkg.packageName, null, true, null, null, 0, null, false);
+                        return null;
+                    }
+                } else if (!isBootScan) {
+                    // Pass this off to the ThemeService for processing
+                    ThemeManager tm =
+                            (ThemeManager) mContext.getSystemService(Context.THEME_SERVICE);
+                    if (tm != null) {
+                        tm.processThemeResources(pkg.packageName);
+                    }
+>>>>>>> 281712a... Themes: Let ThemeService handle all theme processing [1/3]
                 }
             }
 
             //Icon Packs need aapt too
+<<<<<<< HEAD
             //TODO: No need to run aapt on icons for every startup...
             if (isIconCompileNeeded(pkg)) {
                 try {
@@ -5337,6 +5374,20 @@ public class PackageManagerService extends IPackageManager.Stub {
                     mLastScanError = PackageManager.INSTALL_FAILED_THEME_AAPT_ERROR;
                     uninstallThemeForAllApps(pkg);
                     deletePackageLI(pkg.packageName, null, true, null, null, 0, null, false);
+=======
+            if ((mBootThemeConfig != null &&
+                    pkg.packageName.equals(mBootThemeConfig.getIconPackPkgName()))) {
+                if (isIconCompileNeeded(pkg)) {
+                    try {
+                        ThemeUtils.createCacheDirIfNotExists();
+                        ThemeUtils.createIconDirIfNotExists(pkg.packageName);
+                        compileIconPack(pkg);
+                    } catch (Exception e) {
+                        mLastScanError = PackageManager.INSTALL_FAILED_THEME_AAPT_ERROR;
+                        uninstallThemeForAllApps(pkg);
+                        deletePackageLI(pkg.packageName, null, true, null, null, 0, null, false);
+                    }
+>>>>>>> 281712a... Themes: Let ThemeService handle all theme processing [1/3]
                 }
             }
         }
@@ -12397,5 +12448,120 @@ public class PackageManagerService extends IPackageManager.Stub {
     @Override
     public ComposedIconInfo getComposedIconInfo() {
         return mIconPackHelper != null ? mIconPackHelper.getComposedIconInfo() : null;
+    }
+
+    @Override
+    public int processThemeResources(String themePkgName) {
+        mContext.enforceCallingOrSelfPermission(
+                Manifest.permission.ACCESS_THEME_MANAGER, null);
+        PackageParser.Package pkg = mPackages.get(themePkgName);
+        if (pkg == null) {
+            Log.w(TAG, "Unable to get pkg for processing " + themePkgName);
+            return 0;
+        }
+
+        // Process icons
+        if (isIconCompileNeeded(pkg)) {
+            try {
+                ThemeUtils.createCacheDirIfNotExists();
+                ThemeUtils.createIconDirIfNotExists(pkg.packageName);
+                compileIconPack(pkg);
+            } catch (Exception e) {
+                uninstallThemeForAllApps(pkg);
+                deletePackageX(themePkgName, getCallingUid(), PackageManager.DELETE_ALL_USERS);
+                return PackageManager.INSTALL_FAILED_THEME_AAPT_ERROR;
+            }
+        }
+
+        int errorCode = 0;
+        // Generate Idmaps and res tables if pkg is a theme
+        for(String target : pkg.mOverlayTargets) {
+            Exception failedException = null;
+            try {
+                compileResourcesAndIdmapIfNeeded(mPackages.get(target), pkg);
+            } catch (IdmapException e) {
+                failedException = e;
+                errorCode = PackageManager.INSTALL_FAILED_THEME_IDMAP_ERROR;
+            } catch (AaptException e) {
+                failedException = e;
+                errorCode = PackageManager.INSTALL_FAILED_THEME_AAPT_ERROR;
+            } catch (Exception e) {
+                failedException = e;
+                errorCode = PackageManager.INSTALL_FAILED_THEME_UNKNOWN_ERROR;
+            }
+
+            if (failedException != null) {
+                Log.e(TAG, "Unable to process theme, uninstalling " + pkg.packageName,
+                      failedException);
+                uninstallThemeForAllApps(pkg);
+                deletePackageX(themePkgName, getCallingUid(), PackageManager.DELETE_ALL_USERS);
+                return errorCode;
+            }
+        }
+
+        return 0;
+    }
+
+    @Override
+    public void setComponentProtectedSetting(ComponentName componentName, boolean newState,
+            int userId) {
+        enforceCrossUserPermission(Binder.getCallingUid(), userId, false, "set protected");
+
+        String packageName = componentName.getPackageName();
+        String className = componentName.getClassName();
+
+        PackageSetting pkgSetting;
+        ArrayList<String> components;
+
+        synchronized (mPackages) {
+            pkgSetting = mSettings.mPackages.get(packageName);
+
+            if (pkgSetting == null) {
+                if (className == null) {
+                    throw new IllegalArgumentException(
+                            "Unknown package: " + packageName);
+                }
+                throw new IllegalArgumentException(
+                        "Unknown component: " + packageName
+                                + "/" + className);
+            }
+
+            //Protection levels must be applied at the Component Level!
+            if (className == null) {
+                throw new IllegalArgumentException(
+                        "Must specify Component Class name."
+                );
+            } else {
+                PackageParser.Package pkg = pkgSetting.pkg;
+                if (pkg == null || !pkg.hasComponentClassName(className)) {
+                    if (pkg.applicationInfo.targetSdkVersion >= Build.VERSION_CODES.JELLY_BEAN) {
+                        throw new IllegalArgumentException("Component class " + className
+                                + " does not exist in " + packageName);
+                    } else {
+                        Slog.w(TAG, "Failed setComponentProtectedSetting: component class "
+                                + className + " does not exist in " + packageName);
+                    }
+                }
+
+                pkgSetting.protectComponentLPw(className, newState, userId);
+                mSettings.writePackageRestrictionsLPr(userId);
+
+                components = mPendingBroadcasts.get(userId, packageName);
+                final boolean newPackage = components == null;
+                if (newPackage) {
+                    components = new ArrayList<String>();
+                }
+                if (!components.contains(className)) {
+                    components.add(className);
+                }
+            }
+        }
+
+        long callingId = Binder.clearCallingIdentity();
+        try {
+            int packageUid = UserHandle.getUid(userId, pkgSetting.appId);
+        } finally {
+            Binder.restoreCallingIdentity(callingId);
+        }
     }
 }

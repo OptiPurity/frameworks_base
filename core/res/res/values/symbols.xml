@@ -1788,6 +1788,10 @@
   <java-symbol type="bool" name="config_multiColorNotificationLed" />
   <java-symbol type="bool" name="config_show_cmIMESwitcher"/>
 
+  <!-- Theme install failure notification -->
+  <java-symbol type="string" name="theme_install_error_title" />
+  <java-symbol type="string" name="theme_install_error_message" />
+
   <!-- LED flashlight -->
   <java-symbol type="bool" name="config_enableTorch" />
 
@@ -1821,4 +1825,5 @@
   <java-symbol type="dimen" name="navigation_ring_activity_icon_size" />
 
   <java-symbol type="bool" name="use_motion_accel" />
+
 </resources>
