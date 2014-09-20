@@ -22,12 +22,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.UserHandle;
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.ActivityNotFoundException;
 import android.app.ActivityManager;
 import android.util.Log;
+
+import com.android.internal.R;
 
 import java.util.List;
 
@@ -58,7 +61,10 @@ public class TaskUtils {
             }
         }
         if (lastAppId > 0) {
-            am.moveTaskToFront(lastAppId, am.MOVE_TASK_NO_USER_ACTION);
+            // Provide some animation on last app switch
+            final ActivityOptions opts = ActivityOptions.makeCustomAnimation(context,
+                        R.anim.last_app_in, R.anim.last_app_out);
+            am.moveTaskToFront(lastAppId, am.MOVE_TASK_NO_USER_ACTION, opts.toBundle());
         } else if (lastAppIntent != null) {
             // last task is dead, restart it.
             lastAppIntent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
