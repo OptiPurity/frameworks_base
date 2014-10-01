@@ -61,11 +61,8 @@
             android:layout_width="match_parent"
             android:layout_height="2dip"
             android:visibility="gone"
-<<<<<<< HEAD:core/res/res/layout/alert_dialog_holo.xml
-            android:background="@android:color/holo_blue_light" />
-=======
             android:background="@color/dialog_title_divider" />
->>>>>>> ae6172f... Framework: Make the dialog divider color themeable:core/res/res/layout/alert_dialog_holo_dark.xml
+
         <!-- If the client uses a customTitle, it will be added here. -->
     </LinearLayout>
 
